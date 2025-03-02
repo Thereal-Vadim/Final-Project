@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Оформление заказа</h2>
+<form method="post">
+    {% csrf_token %}
+    <label>Адрес доставки:</label>
+    <textarea name="address" rows="4" cols="50"></textarea>
+    <button type="submit">Подтвердить</button>
+</form>
+{% endblock %}
