@@ -37,6 +37,9 @@ def add_to_cart(request, product_id):
 def cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     items = cart.cartitem_set.all()
+    # Вычисляем итоговую сумму для каждого элемента
+    for item in items:
+        item.total = item.quantity * item.product.price if item.quantity and item.product.price else 0
     return render(request, 'flowers/cart.html', {'items': items})
 
 @login_required

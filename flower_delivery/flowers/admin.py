@@ -7,5 +7,5 @@ admin.site.register(CartItem)
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'status', 'created_at')  # Поля для отображения
-    list_editable = ('status',)  # Поле, которое можно редактировать прямо в списке
+    list_display = ('id', 'user', 'status', 'created_at')
+    list_editable = ('status',)
