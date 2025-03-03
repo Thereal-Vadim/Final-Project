@@ -21,7 +21,9 @@ def get_product_by_name(name):
     try:
         response = requests.get(f"{API_URL.replace('orders', 'products')}?name={name}")
         response.raise_for_status()
-        products = response.json()['results']
+        data = response.json()  # Получаем JSON-ответ
+        # Если API возвращает список напрямую, фильтруем по имени
+        products = [p for p in data if p['name'].lower() == name.lower()]
         return products[0] if products else None
     except requests.RequestException as e:
         print(f"Ошибка при поиске продукта: {e}")
@@ -69,11 +71,45 @@ async def products(update: Update, context) -> int:
 
     # Формируем данные для заказа
     order_data = {
-        "user": 1,  # Здесь нужно указать ID пользователя (замените на реальный ID или реализуйте аутентификацию)
+        "user": 1,  # Убедитесь, что пользователь с id=1 существует
         "delivery_address": user_data['address'],
         "status": "pending",
         "orderitem_set": []
     }
+
+    # Парсим список продуктов и добавляем их в orderitem_set
+    product_names = [p.strip() for p in user_data['products'].split(',')]
+    for name in product_names:
+        product = get_product_by_name(name)
+        if product:
+            print(f"Найден продукт: {product}")  # Отладочный вывод
+            order_data["orderitem_set"].append({
+                "product": product['id'],
+                "quantity": 1  # Можно запросить количество у пользователя для улучшения
+            })
+        else:
+            await update.message.reply_text(f"Продукт '{name}' не найден. Пожалуйста, проверьте названия.")
+            return PRODUCTS
+
+    print(f"Отправляем заказ: {order_data}")  # Отладочный вывод перед запросом
+
+    # Отправляем заказ в API
+    headers = {'Content-Type': 'application/json'}
+    try:
+        response = requests.post(API_URL, data=json.dumps(order_data), headers=headers)
+        response.raise_for_status()
+        order_id = response.json()['id']
+        await update.message.reply_text(
+            f"Ваш заказ принят!\n"
+            f"Номер заказа: {order_id}\n"
+            f"Статус заказа будет отправлен позже."
+        )
+    except requests.RequestException as e:
+        await update.message.reply_text(f"Ошибка при сохранении заказа: {e}")
+        print(f"Детали ошибки: {e.response.status_code} - {e.response.text if e.response else 'No response'}")  # Дополнительная отладка
+        return ConversationHandler.END
+
+    return ConversationHandler.END
 
     # Парсим список продуктов и добавляем их в orderitem_set
     product_names = [p.strip() for p in user_data['products'].split(',')]
@@ -118,7 +154,7 @@ async def check_order_status(context):
         # Получаем все заказы через API
         response = requests.get(API_URL, headers={'Content-Type': 'application/json'})
         response.raise_for_status()
-        orders = response.json()['results']
+        orders = response.json()
 
         for order in orders:
             chat_id = order['user']['chat_id']  # Здесь нужно хранить chat_id пользователя в модели Order или через отдельную таблицу
@@ -131,6 +167,8 @@ async def check_order_status(context):
                     chat_id=chat_id,
                     text=f"Обновление заказа #{order_id}: Статус — {status}"
                 )
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP ошибка при проверке статусов: {e.response.status_code} - {e.response.text}")
     except requests.RequestException as e:
         print(f"Ошибка при проверке статусов: {e}")
 
