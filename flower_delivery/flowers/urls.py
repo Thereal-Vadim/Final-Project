@@ -1,5 +1,11 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
+from rest_framework.routers import DefaultRouter
+
+# Создаём роутер для API
+router = DefaultRouter()
+router.register(r'orders', views.OrderViewSet, basename='order')
+router.register(r'products', views.ProductViewSet, basename='product')
 
 urlpatterns = [
     path('register/', views.register, name='register'),
@@ -9,4 +15,5 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('order_history/', views.order_history, name='order_history'),
     path('repeat_order/<int:order_id>/', views.repeat_order, name='repeat_order'),
+    path('api/', include(router.urls)),  # Добавляем API маршруты
 ]

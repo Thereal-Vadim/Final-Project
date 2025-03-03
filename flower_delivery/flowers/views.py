@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm  # Импортируем обе формы
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login
+from rest_framework import viewsets, permissions, response
+from .serializers import OrderSerializer, ProductSerializer  # Добавляем импорт ProductSerializer
 from .models import Product, Cart, CartItem, Order, OrderItem
 
 @login_required
@@ -63,3 +65,28 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
+
+# API для продуктов
+class ProductViewSet(viewsets.ModelViewSet):
+    serializer_class = ProductSerializer  # Теперь импортирован
+    permission_classes = [permissions.AllowAny]  # Доступен всем для поиска
+
+    def get_queryset(self):
+        name = self.request.query_params.get('name', None)
+        if name:
+            return Product.objects.filter(name__icontains=name)
+        return Product.objects.all()
+
+# API для заказов
+class OrderViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return response.Response(serializer.data, status=201)
