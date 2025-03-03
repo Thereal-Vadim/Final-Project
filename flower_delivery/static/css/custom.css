@@ -1,0 +1,157 @@
+/* Общие стили */
+body {
+    background-color: #f8f9fa; /* Светлый фон для всей страницы */
+    font-family: 'Roboto', sans-serif;
+}
+
+.container-fluid {
+    background-color: #ffffff; /* Белый фон для контейнера контента */
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* Стили для навигации */
+.navbar {
+    background-color: #e9ecef !important; /* Более светлый фон навигации */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand, .nav-link {
+    color: #2c3e50 !important; /* Тёмно-синий цвет текста */
+}
+
+.navbar-brand:hover, .nav-link:hover {
+    color: #1a252f !important; /* Ещё темнее при наведении */
+}
+
+/* Стили для кнопок в навигации (плитки) */
+.nav-link.btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.nav-link.btn:hover {
+    transform: translateY(-2px); /* Лёгкое поднятие при наведении */
+    background-color: #ffffff !important; /* Белый фон при наведении */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link.btn-outline-primary {
+    border-color: #3498db; /* Синий контур */
+    color: #3498db; /* Синий текст */
+}
+
+.nav-link.btn-outline-primary:hover {
+    color: #ffffff !important; /* Белый текст при наведении */
+}
+
+.nav-link.btn-outline-success {
+    border-color: #27ae60; /* Зелёный контур */
+    color: #27ae60; /* Зелёный текст */
+}
+
+.nav-link.btn-outline-success:hover {
+    color: #ffffff !important; /* Белый текст при наведении */
+}
+
+/* Стили для заголовков и текста */
+h1, h5 {
+    color: #2c3e50;
+}
+
+.text-muted {
+    color: #7f8c8d !important; /* Более мягкий серый цвет для мутированного текста */
+}
+
+/* Стили для карточек товаров */
+.card {
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px); /* Лёгкое поднятие при наведении */
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card-img-top {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.card-body {
+    background-color: #f8f9fa; /* Лёгкий фон для тела карточки */
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* Стили для кнопок */
+.btn-primary {
+    background-color: #3498db; /* Более яркий синий цвет кнопки */
+    border-color: #3498db;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9; /* Темнее при наведении */
+    border-color: #2980b9;
+}
+
+.btn-success {
+    background-color: #27ae60; /* Зелёный для кнопки "Оформить заказ" */
+    border-color: #27ae60;
+}
+
+.btn-success:hover {
+    background-color: #219653; /* Темнее при наведении */
+    border-color: #219653;
+}
+
+/* Стили для иконок */
+.fa-flower, .fa-shopping-cart, .fa-history, .fa-sign-out-alt, .fa-sign-in-alt, .fa-user-plus, .fa-cart-plus, .fa-check, .fa-truck, .fa-redo {
+    margin-right: 8px;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .col-md-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .card {
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .nav-link {
+        font-size: 0.9rem;
+    }
+
+    .nav-link.btn {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+    }
+}
+
+/* Стили для форм */
+.form-control {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}

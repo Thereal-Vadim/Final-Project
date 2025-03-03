@@ -1,22 +1,8 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
-from .models import Product
-from .models import Cart, CartItem
 from django.contrib.auth.decorators import login_required
-from .models import Order, OrderItem
-
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            Cart.objects.get_or_create(user=user)  # Создаём корзину для нового пользователя
-            return redirect('catalog')
-    else:
-        form = UserCreationForm()
-    return render(request, 'registration/register.html', {'form': form})
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm  # Импортируем обе формы
+from django.contrib.auth import login
+from .models import Product, Cart, CartItem, Order, OrderItem
 
 @login_required
 def catalog(request):
@@ -46,7 +32,7 @@ def cart(request):
 def checkout(request):
     if request.method == 'POST':
         cart = Cart.objects.get(user=request.user)
-        order = Order.objects.create(user=request.user, delivery_address=request.POST['address'])
+        order = Order.objects.create(user=request.user, delivery_address=request.POST['address'], status="pending")
         for item in cart.cartitem_set.all():
             OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity)
         cart.delete()  # Очистка корзины после оформления
@@ -61,7 +47,19 @@ def order_history(request):
 @login_required
 def repeat_order(request, order_id):
     old_order = Order.objects.get(id=order_id)
-    new_order = Order.objects.create(user=request.user, delivery_address=old_order.delivery_address)
+    new_order = Order.objects.create(user=request.user, delivery_address=old_order.delivery_address, status="pending")
     for item in old_order.orderitem_set.all():
         OrderItem.objects.create(order=new_order, product=item.product, quantity=item.quantity)
-    return redirect('flowers/order_history')
+    return redirect('order_history')
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            Cart.objects.get_or_create(user=user)  # Создаём корзину для нового пользователя
+            return redirect('catalog')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})

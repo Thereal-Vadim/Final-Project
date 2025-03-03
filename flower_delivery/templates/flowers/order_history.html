@@ -1,8 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>История заказов</h2>
-{% for order in orders %}
-<p>Заказ #{{ order.id }} - {{ order.status }} - {{ order.created_at }}</p>
-<a href="{% url 'repeat_order' order.id %}">Повторить заказ</a>
-{% endfor %}
+<div class="container-fluid">
+    <h1 class="mb-4">История заказов <i class="fas fa-history"></i></h1>
+    {% if orders %}
+    <div class="list-group">
+        {% for order in orders %}
+        <a href="#" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Заказ #{{ order.id }}</h5>
+                <small>{{ order.created_at }}</small>
+            </div>
+            <p class="mb-1">Статус: {{ order.status }}</p>
+            <a href="{% url 'repeat_order' order.id %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-redo"></i> Повторить заказ</a>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">У вас нет заказов. <a href="{% url 'catalog' %}">Сделайте заказ</a>.</p>
+    {% endif %}
+</div>
 {% endblock %}

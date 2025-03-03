@@ -1,21 +1,28 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<div class="row">
-    <h1 class="mb-4">Каталог цветов</h1>
+<div class="container-fluid">
+    <h1 class="mb-4">Каталог цветов <i class="fas fa-flower"></i></h1>
     <p class="text-muted mb-4">Выберите прекрасные букеты для любого случая — от романтических подарков до праздничных композиций!</p>
-    {% for product in products %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="object-fit: cover; height: 200px;">
-            <div class="card-body">
-                <h5 class="card-title">{{ product.name }}</h5>
-                <p class="card-text">Цена: {{ product.price }} руб.</p>
-                <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary">Добавить в корзину</a>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="object-fit: cover; height: 200px;">
+                {% else %}
+                <img src="{% static 'images/default-flower.jpg' %}" class="card-img-top" alt="{{ product.name }}" style="object-fit: cover; height: 200px;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">Цена: {{ product.price }} руб.</p>
+                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary"><i class="fas fa-cart-plus"></i> Добавить в корзину</a>
+                </div>
             </div>
         </div>
+        {% empty %}
+        <p class="text-muted">Каталог пуст. Добавьте товары через админ-панель.</p>
+        {% endfor %}
     </div>
-    {% empty %}
-    <p class="text-muted">Каталог пуст. Добавьте товары через админ-панель.</p>
-    {% endfor %}
 </div>
 {% endblock %}

@@ -1,10 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Оформление заказа</h2>
-<form method="post">
-    {% csrf_token %}
-    <label>Адрес доставки:</label>
-    <textarea name="address" rows="4" cols="50"></textarea>
-    <button type="submit">Подтвердить</button>
-</form>
+<div class="container-fluid">
+    <h1 class="mb-4">Оформление заказа <i class="fas fa-truck"></i></h1>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="address" class="form-label">Адрес доставки</label>
+            <textarea name="address" id="address" class="form-control" rows="4" required></textarea>
+            <div class="invalid-feedback">
+                Пожалуйста, введите адрес доставки.
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Подтвердить</button>
+    </form>
+</div>
 {% endblock %}

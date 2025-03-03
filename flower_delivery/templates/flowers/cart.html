@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row">
-    <h1 class="mb-4">Корзина</h1>
+<div class="container-fluid">
+    <h1 class="mb-4">Корзина <i class="fas fa-shopping-cart"></i></h1>
     {% if items %}
     <div class="table-responsive">
         <table class="table table-striped">
@@ -37,7 +37,7 @@
             </tbody>
         </table>
     </div>
-    <a href="{% url 'checkout' %}" class="btn btn-success">Оформить заказ</a>
+    <a href="{% url 'checkout' %}" class="btn btn-success"><i class="fas fa-check"></i> Оформить заказ</a>
     {% else %}
     <p class="text-muted">Ваша корзина пуста. <a href="{% url 'catalog' %}">Выберите товары в каталоге</a>.</p>
     {% endif %}
