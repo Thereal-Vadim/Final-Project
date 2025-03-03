@@ -12,6 +12,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            Cart.objects.get_or_create(user=user)  # Создаём корзину для нового пользователя
             return redirect('catalog')
     else:
         form = UserCreationForm()
@@ -34,7 +35,7 @@ def add_to_cart(request, product_id):
 
 @login_required
 def cart(request):
-    cart = Cart.objects.get(user=request.user)
+    cart, created = Cart.objects.get_or_create(user=request.user)
     items = cart.cartitem_set.all()
     return render(request, 'flowers/cart.html', {'items': items})
 
