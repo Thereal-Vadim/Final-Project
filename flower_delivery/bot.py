@@ -1,199 +1,130 @@
+import os
+import django
+from dotenv import load_dotenv
 import telegram
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler, JobQueue
-import os
-from dotenv import load_dotenv
-import requests
-import json
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler
+from asgiref.sync import sync_to_async
 
-# Загружаем переменные окружения из .env файла
+# Настройка Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'flower_delivery.settings')
+django.setup()
+
+# Импорт моделей после настройки Django
+from flowers.models import Order, AdminTelegramUser
+
 load_dotenv()
 
-# Получаем токен бота и URL API из переменных окружения
-BOT_TOKEN = os.getenv('BOT_TOKEN', '7942497197:AAEfsz17_cjwea9e7cOlp3N6sLwNyCX6-Zw')  # Замените на ваш токен бота
-API_URL = os.getenv('API_URL', 'http://127.0.0.1:8000/api/orders/')  # Замените на ваш URL API
+BOT_TOKEN = os.getenv('BOT_TOKEN', '7942497197:AAEfsz17_cjwea9e7cOlp3N6sLwNyCX6-Zw')
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN не указан в .env")
 
-# Состояния разговора
-NAME, PHONE, ADDRESS, PRODUCTS = range(4)
+# Состояния для команды /setstatus
+SET_ORDER_ID, SET_STATUS = range(2)
 
-# Функция для поиска продукта по названию через API
-def get_product_by_name(name):
-    try:
-        response = requests.get(f"{API_URL.replace('orders', 'products')}?name={name}")
-        response.raise_for_status()
-        data = response.json()  # Получаем JSON-ответ
-        # Если API возвращает список напрямую, фильтруем по имени
-        products = [p for p in data if p['name'].lower() == name.lower()]
-        return products[0] if products else None
-    except requests.RequestException as e:
-        print(f"Ошибка при поиске продукта: {e}")
-        return None
+# Асинхронная проверка, является ли пользователь администратором
+async def is_admin_chat(chat_id):
+    return await sync_to_async(lambda: AdminTelegramUser.objects.filter(chat_id=chat_id).exists(), thread_sensitive=True)()
 
-# Обработчик команды /start
-async def start(update: Update, context) -> int:
-    user = update.message.from_user
-    await update.message.reply_text(
-        f"Привет, {user.first_name}! Я бот для заказа цветов.\n"
-        "Пожалуйста, введите ваше имя:"
-    )
-    return NAME
-
-# Обработчик имени
-async def name(update: Update, context) -> int:
-    user = update.message.from_user
-    context.user_data['name'] = update.message.text
-    await update.message.reply_text(
-        "Спасибо! Теперь введите ваш номер телефона (например, +79991234567):"
-    )
-    return PHONE
-
-# Обработчик телефона
-async def phone(update: Update, context) -> int:
-    context.user_data['phone'] = update.message.text
-    await update.message.reply_text(
-        "Отлично! Введите адрес доставки:"
-    )
-    return ADDRESS
-
-# Обработчик адреса
-async def address(update: Update, context) -> int:
-    context.user_data['address'] = update.message.text
-    await update.message.reply_text(
-        "Выберите букеты (перечислите названия через запятую, например, 'Розы красные, Лилии белые'):"
-    )
-    return PRODUCTS
-
-# Обработчик выбора продуктов
-async def products(update: Update, context) -> int:
-    context.user_data['products'] = update.message.text
-    user_data = context.user_data
+# Команда /start
+async def start(update: Update, context) -> None:
     chat_id = update.effective_chat.id
-
-    # Формируем данные для заказа
-    order_data = {
-        "user": 1,  # Убедитесь, что пользователь с id=1 существует
-        "delivery_address": user_data['address'],
-        "status": "pending",
-        "orderitem_set": []
-    }
-
-    # Парсим список продуктов и добавляем их в orderitem_set
-    product_names = [p.strip() for p in user_data['products'].split(',')]
-    for name in product_names:
-        product = get_product_by_name(name)
-        if product:
-            print(f"Найден продукт: {product}")  # Отладочный вывод
-            order_data["orderitem_set"].append({
-                "product": product['id'],
-                "quantity": 1  # Можно запросить количество у пользователя для улучшения
-            })
-        else:
-            await update.message.reply_text(f"Продукт '{name}' не найден. Пожалуйста, проверьте названия.")
-            return PRODUCTS
-
-    print(f"Отправляем заказ: {order_data}")  # Отладочный вывод перед запросом
-
-    # Отправляем заказ в API
-    headers = {'Content-Type': 'application/json'}
-    try:
-        response = requests.post(API_URL, data=json.dumps(order_data), headers=headers)
-        response.raise_for_status()
-        order_id = response.json()['id']
-        await update.message.reply_text(
-            f"Ваш заказ принят!\n"
-            f"Номер заказа: {order_id}\n"
-            f"Статус заказа будет отправлен позже."
-        )
-    except requests.RequestException as e:
-        await update.message.reply_text(f"Ошибка при сохранении заказа: {e}")
-        print(f"Детали ошибки: {e.response.status_code} - {e.response.text if e.response else 'No response'}")  # Дополнительная отладка
-        return ConversationHandler.END
-
-    return ConversationHandler.END
-
-    # Парсим список продуктов и добавляем их в orderitem_set
-    product_names = [p.strip() for p in user_data['products'].split(',')]
-    for name in product_names:
-        product = get_product_by_name(name)
-        if product:
-            order_data["orderitem_set"].append({
-                "product": product['id'],
-                "quantity": 1  # Можно запросить количество у пользователя для улучшения
-            })
-        else:
-            await update.message.reply_text(f"Продукт '{name}' не найден. Пожалуйста, проверьте названия.")
-            return PRODUCTS
-
-    # Отправляем заказ в API
-    headers = {'Content-Type': 'application/json'}
-    try:
-        response = requests.post(API_URL, data=json.dumps(order_data), headers=headers)
-        response.raise_for_status()
-        order_id = response.json()['id']
-        await update.message.reply_text(
-            f"Ваш заказ принят!\n"
-            f"Номер заказа: {order_id}\n"
-            f"Статус заказа будет отправлен позже."
-        )
-    except requests.RequestException as e:
-        await update.message.reply_text(f"Ошибка при сохранении заказа: {e}")
-        return ConversationHandler.END
-
-    return ConversationHandler.END
-
-# Обработчик команды /cancel для отмены разговора
-async def cancel(update: Update, context) -> int:
+    is_admin = await is_admin_chat(chat_id)
+    if not is_admin:
+        await update.message.reply_text("У вас нет прав администратора.")
+        return
     await update.message.reply_text(
-        "Диалог отменён. Напишите /start, чтобы начать заново."
+        "Привет, администратор! Доступные команды:\n"
+        "/orders - Показать все заказы\n"
+        "/setstatus <order_id> <status> - Изменить статус заказа\n"
+        "/help - Показать помощь"
     )
+
+# Команда /orders
+async def list_orders(update: Update, context) -> None:
+    chat_id = update.effective_chat.id
+    is_admin = await is_admin_chat(chat_id)
+    if not is_admin:
+        await update.message.reply_text("У вас нет прав администратора.")
+        return
+    orders = await sync_to_async(list)(Order.objects.all())
+    if not orders:
+        await update.message.reply_text("Нет заказов.")
+        return
+    message = "Список заказов:\n"
+    for order in orders:
+        message += f"#{order.id} - {order.status} ({order.created_at})\n"
+        message += f"Клиент: {order.user.username}\nАдрес: {order.delivery_address}\n"
+        message += f"Стоимость: {order.total_price} руб.\n\n"
+    await update.message.reply_text(message)
+
+# Команда /setstatus
+async def set_status_start(update: Update, context) -> int:
+    chat_id = update.effective_chat.id
+    is_admin = await is_admin_chat(chat_id)
+    if not is_admin:
+        await update.message.reply_text("У вас нет прав администратора.")
+        return ConversationHandler.END
+    await update.message.reply_text("Введите ID заказа:")
+    return SET_ORDER_ID
+
+async def set_status_order_id(update: Update, context) -> int:
+    context.user_data['order_id'] = update.message.text
+    await update.message.reply_text("Введите новый статус (pending, delivered, canceled):")
+    return SET_STATUS
+
+async def set_status_status(update: Update, context) -> int:
+    order_id = context.user_data['order_id']
+    new_status = update.message.text.lower()
+    if new_status not in dict(Order.STATUS_CHOICES):
+        await update.message.reply_text("Неверный статус. Используйте: pending, delivered, canceled.")
+        return ConversationHandler.END
+    try:
+        order = await sync_to_async(Order.objects.get)(id=order_id)
+        order.status = new_status
+        await sync_to_async(order.save)()
+        message = f"Статус заказа #{order_id} изменён на {new_status}.\n"
+        message += f"Клиент: {order.user.username}\nАдрес: {order.delivery_address}"
+        await update.message.reply_text(message)
+    except Order.DoesNotExist:
+        await update.message.reply_text("Заказ не найден.")
     return ConversationHandler.END
 
-# Функция для проверки статуса заказов и отправки уведомлений
-async def check_order_status(context):
-    try:
-        # Получаем все заказы через API
-        response = requests.get(API_URL, headers={'Content-Type': 'application/json'})
-        response.raise_for_status()
-        orders = response.json()
+# Команда /help
+async def help_command(update: Update, context) -> None:
+    chat_id = update.effective_chat.id
+    is_admin = await is_admin_chat(chat_id)
+    if not is_admin:
+        await update.message.reply_text("У вас нет прав администратора.")
+        return
+    await update.message.reply_text(
+        "Доступные команды:\n"
+        "/orders - Показать все заказы\n"
+        "/setstatus - Изменить статус заказа\n"
+        "/help - Показать эту помощь"
+    )
 
-        for order in orders:
-            chat_id = order['user']['chat_id']  # Здесь нужно хранить chat_id пользователя в модели Order или через отдельную таблицу
-            status = order['status']
-            order_id = order['id']
-
-            # Отправляем уведомление, если статус изменился
-            if status != 'pending':
-                await context.bot.send_message(
-                    chat_id=chat_id,
-                    text=f"Обновление заказа #{order_id}: Статус — {status}"
-                )
-    except requests.exceptions.HTTPError as e:
-        print(f"HTTP ошибка при проверке статусов: {e.response.status_code} - {e.response.text}")
-    except requests.RequestException as e:
-        print(f"Ошибка при проверке статусов: {e}")
-
-# Главная функция для запуска бота
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
 
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+    # Обработчик изменения статуса
+    status_conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('setstatus', set_status_start)],
         states={
-            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, name)],
-            PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, phone)],
-            ADDRESS: [MessageHandler(filters.TEXT & ~filters.COMMAND, address)],
-            PRODUCTS: [MessageHandler(filters.TEXT & ~filters.COMMAND, products)],
+            SET_ORDER_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, set_status_order_id)],
+            SET_STATUS: [MessageHandler(filters.TEXT & ~filters.COMMAND, set_status_status)],
         },
-        fallbacks=[CommandHandler('cancel', cancel)],
+        fallbacks=[],
     )
 
-    application.add_handler(conv_handler)
+    # Регистрация обработчиков
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('orders', list_orders))
+    application.add_handler(status_conv_handler)
+    application.add_handler(CommandHandler('help', help_command))
 
-    # Настройка планировщика для проверки статусов заказов
-    job_queue = application.job_queue
-    job_queue.run_repeating(check_order_status, interval=300)  # Проверка каждые 5 минут
-
-    application.run_polling(allowed_updates=telegram.Update.ALL_TYPES)  # Используем ALL_TYPES вместо ALL
+    # Запуск бота
+    application.run_polling(allowed_updates=telegram.Update.ALL_TYPES)
 
 if __name__ == '__main__':
     main()

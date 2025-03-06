@@ -1,17 +1,25 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-<div class="container-fluid">
-    <h1 class="mb-4">Оформление заказа <i class="fas fa-truck"></i></h1>
-    <form method="post" class="needs-validation" novalidate>
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="address" class="form-label">Адрес доставки</label>
-            <textarea name="address" id="address" class="form-control" rows="4" required></textarea>
-            <div class="invalid-feedback">
-                Пожалуйста, введите адрес доставки.
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Подтвердить</button>
-    </form>
-</div>
+  <h2>Оформление заказа</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div>
+      <label for="address">Адрес доставки:</label>
+      <input type="text" id="address" name="address" required>
+    </div>
+    <div>
+      <label for="delivery_date">Дата доставки (ГГГГ-ММ-ДД):</label>
+      <input type="date" id="delivery_date" name="delivery_date">
+    </div>
+    <div>
+      <label for="delivery_time">Время доставки (ЧЧ:ММ):</label>
+      <input type="time" id="delivery_time" name="delivery_time">
+    </div>
+    <div>
+      <label for="comment">Комментарий:</label>
+      <textarea id="comment" name="comment"></textarea>
+    </div>
+    <button type="submit">Оформить заказ</button>
+  </form>
 {% endblock %}

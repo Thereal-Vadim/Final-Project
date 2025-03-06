@@ -1,12 +1,11 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-<div class="container-fluid">
-    <h1 class="mb-4">Регистрация <i class="fas fa-user-plus"></i></h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Зарегистрироваться</button>
-    </form>
-    <p>Уже зарегистрированы? <a href="{% url 'login' %}">Войдите</a>.</p>
-</div>
+  <h2>Регистрация</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Зарегистрироваться</button>
+  </form>
+  <a href="{% url 'catalog' %}">Вернуться к каталогу</a>
 {% endblock %}

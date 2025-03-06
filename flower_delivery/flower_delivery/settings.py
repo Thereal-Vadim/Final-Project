@@ -1,18 +1,11 @@
 from pathlib import Path
 
-# Базовый каталог проекта
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Секретный ключ (замените на безопасный ключ для продакшна)
-SECRET_KEY = 'your-secret-key-here'  # Замените на реальный секретный ключ
-
-# Режим отладки (True для разработки, False для продакшна)
+SECRET_KEY = 'your-secret-key-here'  # Замените на безопасный ключ
 DEBUG = True
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
-# Разрешённые хосты (для продакшна добавьте свои домены, например, ['*'] для разработки)
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # Разрешить локальный доступ
-
-# Приложения Django
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -20,14 +13,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
-    'rest_framework',
     'flowers.apps.FlowersConfig',
 ]
 
-#Мидлвары
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -37,12 +26,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True  # Разрешить все источники для тестирования
-
-# URL конфигурация
 ROOT_URLCONF = 'flower_delivery.urls'
 
-# Настройки шаблонов
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -59,10 +44,8 @@ TEMPLATES = [
     },
 ]
 
-# WSGI приложение
 WSGI_APPLICATION = 'flower_delivery.wsgi.application'
 
-# База данных (SQLite для разработки)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -70,62 +53,22 @@ DATABASES = {
     }
 }
 
-# Валидаторы паролей
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Локализация
+AUTH_USER_MODEL = 'flowers.CustomUser'
+
 LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Статические файлы
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Добавлено для collectstatic
-
-# Медиа-файлы (изображения, загружаемые через ImageField)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Автоматическое поле по умолчанию
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Отключение запроса подтверждения для collectstatic (только для разработки)
-STATICFILES = {
-    'noinput': True,
-}
-
-# Логирование (опционально, для отладки)
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        '': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
-}
