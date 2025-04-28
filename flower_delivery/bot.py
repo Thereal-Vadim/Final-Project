@@ -15,7 +15,7 @@ from flowers.models import Order, AdminTelegramUser
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv('BOT_TOKEN', '7942497197:AAEfsz17_cjwea9e7cOlp3N6sLwNyCX6-Zw')
+BOT_TOKEN = os.getenv('BOT_TOKEN', 'BOT_TOKEN')
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN не указан в .env")
 
